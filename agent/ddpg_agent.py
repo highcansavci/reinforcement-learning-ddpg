@@ -64,6 +64,8 @@ class Agent:
         self.critic.train()
         self.critic.optimizer.zero_grad()
         critic_loss = F.mse_loss(target, critic_value)
+        for param in self.critic.parameters():
+            critic_loss += 0.5 * torch.norm(param, p=2) ** 2  # L2 regularization term
         critic_loss.backward()
         self.critic.optimizer.step()
 

@@ -38,7 +38,7 @@ class Critic(nn.Module):
         torch.nn.init.uniform_(self.q.weight.data, -fc3, fc3)
         torch.nn.init.uniform_(self.q.bias.data, -fc3, fc3)
 
-        self.optimizer = torch.optim.Adam(self.parameters(), lr)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr, weight_decay=1e-2)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
 
