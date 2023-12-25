@@ -10,7 +10,7 @@ if __name__ == "__main__":
     batch_size = 1000
     n_epochs = 4
     alpha = 3e-4
-    agent_ = Agent(batch_size=batch_size, actor_lr=1e-4,
+    agent_ = Agent(batch_size=batch_size, actor_lr=1e-4, env=env,
                    critic_lr=1e-3, tau=1e-3, fc1_dim=400, fc2_dim=300, input_dims=[env.observation_space.shape[0]])
 
     #agent_.load_models()

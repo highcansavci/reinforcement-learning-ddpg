@@ -8,11 +8,13 @@ from model.ornstein_uhlenback_noise import OUNoise
 
 
 class Agent:
-    def __init__(self, actor_lr, critic_lr, input_dims, tau, gamma=0.99, n_actions=2, max_size=int(1e6), fc1_dim=400, fc2_dim=300, batch_size=64):
+    def __init__(self, actor_lr, critic_lr, input_dims, tau, env, gamma=0.99, n_actions=2, max_size=int(1e6), fc1_dim=400, fc2_dim=300, batch_size=64):
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
         self.batch_size = batch_size
+        self.min_action = env.action_space.high[0]
+        self.max_action = env.action_space.low[0]
         self.actor = Actor(actor_lr, input_dims, fc1_dim, fc2_dim, n_actions, "actor")
         self.actor_target = Actor(actor_lr, input_dims, fc1_dim, fc2_dim, n_actions, "actor_target")
         self.critic = Critic(critic_lr, input_dims, fc1_dim, fc2_dim, n_actions, "critic")
@@ -24,7 +26,10 @@ class Agent:
         self.actor.eval()
         observation = torch.tensor(observation, dtype=torch.float32, device=self.actor.device).reshape(1, -1)
         mu = self.actor(observation).to(self.actor.device)
+        # Perform action scaling
+        mu = (mu - self.min_action) * (self.max_action - self.min_action) / 2 + self.min_action
         mu_prime = mu + torch.tensor(self.noise(), dtype=torch.float32, device=self.actor.device)
+        mu_prime = torch.clamp(mu_prime, self.min_action, self.max_action)
         self.actor.train()
         return mu_prime.detach().cpu().numpy()
 
@@ -56,6 +61,7 @@ class Agent:
         self.actor_target.eval()
 
         target_actions = self.actor_target(next_states)
+        target_actions = (target_actions - self.min_action) * (self.max_action - self.min_action) / 2 + self.min_action
         critic_target_value = self.critic_target(next_states, target_actions)
         critic_value = self.critic(states, actions)
 
@@ -72,6 +78,7 @@ class Agent:
         self.critic.eval()
         self.actor.optimizer.zero_grad()
         mu = self.actor(states)
+        mu = (mu - self.min_action) * (self.max_action - self.min_action) / 2 + self.min_action
         self.actor.train()
         actor_loss = -self.critic(states, mu).mean()
         actor_loss.backward()
