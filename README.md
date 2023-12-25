@@ -1,2 +1,2 @@
 # reinforcement-learning-dppg
-Implementation of DPPG RL algorithm and application of the LunarLanderContinuous game. 
+Implementation of DDPG RL algorithm and application of the LunarLanderContinuous game. 
